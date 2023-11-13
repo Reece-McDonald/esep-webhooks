@@ -3,7 +3,7 @@ import os
 import requests
 
 def lambda_handler(event, context):
-    # issue_url grabs the url of the issue that has been interacted with.
+    # issue_url grabs the url of the issue that has been interacted with. Grabs it from 'event', which is of type dictionary.
     issue_url = event['issue']['html_url']
     # payload generates the json 'text' to be printed in slack, being 'Issue Created: issue_url'.
     payload = {'text': f'Issue Created: {issue_url}'}
