@@ -1,23 +1,39 @@
-import json
 import os
-import urllib.request
-from http.client import HTTPResponse
+import json
+import requests
 
 def lambda_handler(event, context):
     try:
-        json_data = json.loads(event)
-    except json.JSONDecodeError as e:
-        return {
-            "errorMessage": f"Error decoding JSON: {str(e)}",
-            "errorType": "JSONDecodeError"
+        # Parse the GitHub webhook event
+        data = json.loads(event['body'])
+        repository_name = data['repository']['full_name']
+        issue_title = data['issue']['title']
+        issue_url = data['issue']['html_url']
+
+        # Customize the Slack message format
+        slack_message = {
+            'text': f'New issue in {repository_name}: *{issue_title}* - {issue_url}'
         }
 
-    payload = f"{{'text':'Issue Created: {json_data['issue']['html_url']}'}}"
+        # Set your Slack incoming webhook URL
+        slack_url = os.environ.get('SLACK_URL')
 
-    url = os.environ.get("SLACK_URL")
-    request_data = payload.encode("utf-8")
-    headers = {"Content-Type": "application/json"}
+        # Send the message to Slack
+        response = requests.post(slack_url, json=slack_message)
 
-    request = urllib.request.Request(url, data=request_data, headers=headers, method="POST")
-    with urllib.request.urlopen(request) as response:  # type: HTTPResponse
-        return response.read().decode("utf-8")
+        if response.status_code == 200:
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'message': 'Message sent to Slack successfully'})
+            }
+        else:
+            return {
+                'statusCode': 500,
+                'body': json.dumps({'error': 'Failed to send message to Slack'})
+            }
+
+    except Exception as e:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'error': str(e)})
+        }
