@@ -3,15 +3,23 @@ import os
 import http.client
 
 def lambda_handler(event, context):
-    # Assuming `event` is a dictionary containing the input data
+    # Log the received event for debugging
+    print(f"Received event: {event}")
 
-    # Deserialize JSON
-    json_data = json.loads(json.dumps(event))
+    # Check if event is not an empty string
+    if not event:
+        return "Error: Empty input event"
 
-    # Access the 'issue' key directly
-    issue_url = json_data.get('issue', {}).get('html_url', '')
+    try:
+        # Try to deserialize JSON
+        json_data = json.loads(event)
+    except json.JSONDecodeError as e:
+        # Log the error for debugging
+        print(f"Error decoding JSON: {str(e)}")
+        return f"Error decoding JSON: {str(e)}"
 
     # Create payload string
+    issue_url = json_data.get('issue', {}).get('html_url', '')
     payload = f"{{'text':'Issue Created: {issue_url}'}}"
 
     # Set up HTTP connection
@@ -33,7 +41,3 @@ def lambda_handler(event, context):
     conn.close()
 
     return result
-    # return {
-    #     'statusCode': 200,
-    #     'body': json.dumps('Hello from Lambda!')
-    # }
