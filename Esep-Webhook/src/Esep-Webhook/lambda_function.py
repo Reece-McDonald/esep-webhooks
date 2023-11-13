@@ -4,12 +4,17 @@ import requests
 
 def lambda_handler(event, context):
     try:
-        # Parse the JSON input
-        input_data = json.loads(event)
-        
-        # Extract relevant information from the JSON data
+        # Check if event is a string or a dictionary
+        if isinstance(event, str):
+            input_data = json.loads(event)
+        elif isinstance(event, dict):
+            input_data = event
+        else:
+            raise ValueError("Unsupported input format")
+
+        # Extract relevant information from the data
         issue_url = input_data['issue']['html_url']
-        
+
         # Customize the Slack message format
         payload = {'text': f'Issue Created: {issue_url}'}
 
